@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="rnbo-version" content="1.0.0-alpha.5">
+
+    <link rel="stylesheet" href="style/style.css">
+    <title>RNBO Web Export</title>
+    <script src="https://cdn.cycling74.com/rnbo/1.1.1/rnbo.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .score-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .score-btn {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .score-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .score-btn.active {
+            background-color: #357a38;
+        }
+        
+        .score-display {
+            max-width: 800px;
+            margin: 20px auto;
+            text-align: center;
+        }
+        
+        .score-image {
+            max-width: 100%;
+            height: auto;
+            display: none;
+        }
+        
+        .score-image.active {
+            display: block;
+        }
+    </style>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #357abd;
+            --background-color: #f5f7fa;
+            --key-white: #ffffff;
+            --key-black: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--background-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .piano-container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .keyboard {
+            display: flex;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .key {
+            width: 60px;
+            height: 200px;
+            margin: 0 2px;
+            background-color: var(--key-white);
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 1rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.1s ease;
+        }
+
+        .key.black {
+            background-color: var(--key-black);
+            color: white;
+            height: 120px;
+            width: 40px;
+            position: absolute;
+            margin: 0;
+            z-index: 2;
+        }
+
+        .key.active {
+            background-color: var(--primary-color);
+            transform: translateY(5px);
+        }
+
+        .key span {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .key.black span {
+            color: #fff;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .button i {
+            font-size: 1.2rem;
+        }
+
+        .button.recording {
+            background-color: #e74c3c;
+            animation: pulse 1s infinite;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 1rem;
+            color: #666;
+        }
+
+        .recordings {
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .recording-list {
+            list-style: none;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .recording-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recording-item:last-child {
+            border-bottom: none;
+        }
+
+        .recording-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .recording-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .instructions {
+            margin-top: 2rem;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .key-mapping {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .key-map {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+
+        .keyboard-key {
+            background: #eee;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+        .piano {
+            /* 确保宽度足够容纳所有琴键 */
+            width: 100px/* 适当调整宽度 */;
+        }
+
+        .key {
+            /* 确保现有样式适用于所有琴键 */
+        }
+
+        .key[data-note="C2"] {
+            /* 如果需要特殊样式 */
+        }
+    </style>
+</head>
+
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <svg id="background" width="100%" height="100%"></svg>
+    <div id="rnbo-root">
+        <div>
+            <h1 id="patcher-title">Unnamed patcher</h1>
+        </div>
+        <div id="rnbo-clickable-keyboard">
+            <h2>MIDI Keyboard</h2>
+            <em id="no-midi-label">No MIDI input</em>
+        </div>
+        <div id="rnbo-inports">
+            <h2>Inports</h2>
+            <em id="no-inports-label">No inports available</em>
+            <form id="inport-form" className="inport">
+                <div className="inport-input">
+                    <select id="inport-select"></select>
+                    <input id="inport-text" type="text"></input>
+                    <input id="inport-submit" className="smallButton" type="submit" value="Send"/>
+                </div>
+            </form>
+        </div>
+        <div id="rnbo-console">
+            <h2>Outports</h2>
+            <em id="no-outports-label">No outports available</em>
+            <div id="rnbo-console-div">
+                <p id="rnbo-console-readout">Waiting for messages...</p>
+                <em id="rnbo-console-description">Check the developer console for more messages from the RNBO device</em>
+            </div>
+        </div>
+        <div id="rnbo-presets">
+            <h2>Presets</h2>
+            <em id="no-presets-label">No presets defined</em>
+            <select id="preset-select"></select>
+        </div>
+        <div id="rnbo-parameter-sliders">
+            <h2>Parameters</h2>
+            <em id="no-param-label">No parameters</em>
+        </div>
+
+        <div>
+            <h2>Score Selection</h2>
+            <div class="score-buttons">
+                <button class="score-btn" onclick="showScore(1)">Score 1</button>
+                <button class="score-btn" onclick="showScore(2)">Score 2</button>
+                <button class="score-btn" onclick="showScore(3)">Score 3</button>
+                <button class="score-btn" onclick="showScore(4)">Score 4</button>
+                <button class="score-btn" onclick="showScore(5)">Score 5</button>
+            </div>
+            
+            <!-- 修改图片的 alt 文本 -->
+            <div class="score-display">
+                <img src="img/sheet1.jpg" class="score-image" id="score1" alt="Score 1">
+                <img src="img/sheet2.jpg" class="score-image" id="score2" alt="Score 2">
+                <img src="img/sheet3.jpg" class="score-image" id="score3" alt="Score 3">
+                <img src="img/sheet4.jpg" class="score-image" id="score4" alt="Score 4">
+                <img src="img/sheet5.jpg" class="score-image" id="score5" alt="Score 5">
+            </div>
+            
+        </div>
+
+        <div class="header">
+            <h1>Music Keyboard</h1>
+            <p>Play music using keyboard or mouse, record and share your work</p>
+        </div>
+    
+        <div class="piano-container">
+            <div class="keyboard">
+                <div class="key" data-note="C" data-key="a"><span>A</span></div>
+                <div class="key black" data-note="C#" data-key="w" style="left: 40px;"><span>W</span></div>
+                <div class="key" data-note="D" data-key="s"><span>S</span></div>
+                <div class="key black" data-note="D#" data-key="e" style="left: 100px;"><span>E</span></div>
+                <div class="key" data-note="E" data-key="d"><span>D</span></div>
+                <div class="key" data-note="F" data-key="f"><span>F</span></div>
+                <div class="key black" data-note="F#" data-key="t" style="left: 220px;"><span>T</span></div>
+                <div class="key" data-note="G" data-key="g"><span>G</span></div>
+                <div class="key black" data-note="G#" data-key="y" style="left: 280px;"><span>Y</span></div>
+                <div class="key" data-note="A" data-key="h"><span>H</span></div>
+                <div class="key black" data-note="A#" data-key="u" style="left: 340px;"><span>U</span></div>
+                <div class="key" data-note="B" data-key="j"><span>J</span></div>
+                <div class="key white" data-note="C2">K</div>
+            </div>
+    
+            <!-- <div class="controls">
+                <button class="button" id="recordButton">
+                    <i class="fas fa-record-vinyl"></i>
+                    Start Recording
+                </button>
+                <button class="button" id="playButton" disabled>
+                    <i class="fas fa-play"></i>
+                    Play Recording
+                </button>
+                <button class="button" id="saveButton" disabled>
+                    <i class="fas fa-save"></i>
+                    Save Recording
+                </button>
+            </div> -->
+    
+            <div class="status" id="status"></div>
+        </div>
+    
+        
+        </div>
+    </div>
+
+    <script type="text/javascript" src="js/guardrails.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <script>
+        // 全局变量
+        let device;
+        let context;
+        let piano;
+
+        // RNBO 初始化函数
+        async function initRNBO() {
+            try {
+                console.log('Starting RNBO initialization...');
+                
+                // 创建音频上下文
+                const WAContext = window.AudioContext || window.webkitAudioContext;
+                context = new WAContext();
+                
+                // 创建输出节点
+                const outputNode = context.createGain();
+                outputNode.connect(context.destination);
+
+                // 加载补丁
+                const patchExportURL = "export/FM_synth.export.json";
+                const response = await fetch(patchExportURL);
+                const patcher = await response.json();
+
+                // 创建 RNBO 设备并存储为全局变量
+                window.device = await RNBO.createDevice({ context, patcher });
+                window.device.node.connect(outputNode);
+                
+                // 初始化参数滑块
+                makeSliders(window.device);
+                
+                console.log('RNBO device created successfully:', window.device);
+                console.log('Initial parameters:', Array.from(window.device.parameters).map(p => `${p.name}: ${p.value}`));
+                
+                return window.device;
+
+            } catch (err) {
+                console.error('RNBO initialization failed:', err);
+                throw err;
+            }
+        }
+
+        // 创建启动按钮
+        function createStartButton() {
+            const startButton = document.createElement('button');
+            startButton.textContent = 'Click to Start';
+            startButton.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 20px 40px;
+                font-size: 18px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                z-index: 1000;
+            `;
+
+            startButton.onclick = async () => {
+                try {
+                    const rnboDevice = await initRNBO();
+                    if (rnboDevice) {
+                        // 等待一小段时间确保参数已经初始化
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        // 创建钢琴键盘并存储为全局变量
+                        window.piano = new PianoKeyboard(rnboDevice);
+                        console.log('Piano created successfully with device parameters:', 
+                            Array.from(rnboDevice.parameters).map(p => `${p.name}: ${p.value}`));
+                    }
+                    startButton.remove();
+                } catch (error) {
+                    console.error('Failed to initialize:', error);
+                }
+            };
+
+            document.body.appendChild(startButton);
+        }
+
+        // 页面加载完成后创建启动按钮
+        document.addEventListener('DOMContentLoaded', createStartButton);
+    </script>
+
+    <!-- 然后加载钢琴键盘类 -->
+    <script>
+        class PianoKeyboard {
+            constructor(rnboDevice) {
+                console.log('Creating PianoKeyboard with device:', rnboDevice);
+                
+                if (!rnboDevice) {
+                    console.error('No RNBO device provided');
+                    throw new Error('RNBO device is required for PianoKeyboard');
+                }
+                
+                // 存储全局设备引用
+                this.device = window.device = rnboDevice;
+                
+                // 添加参数变化监听器
+                this.device.parameterChangeEvent.subscribe(param => {
+                    console.log(`Parameter changed: ${param.name} = ${param.value}`);
+                });
+                
+                // 初始化其他属性
+                this.keys = document.querySelectorAll('.key');
+                this.recordButton = document.getElementById('recordButton');
+                this.playButton = document.getElementById('playButton');
+                this.saveButton = document.getElementById('saveButton');
+                this.status = document.getElementById('status');
+                this.recordingsList = document.getElementById('recordingsList');
+                
+                this.isRecording = false;
+                this.recordedNotes = [];
+                this.pressedKeys = new Set();
+                
+                this.keyMap = {
+                    'A': 'C',
+                    'W': 'C#',
+                    'S': 'D',
+                    'E': 'D#',
+                    'D': 'E',
+                    'F': 'F',
+                    'T': 'F#',
+                    'G': 'G',
+                    'Y': 'G#',
+                    'H': 'A',
+                    'U': 'A#',
+                    'J': 'B',
+                    'K': 'C2'
+                };
+                
+                this.init();
+                console.log('PianoKeyboard initialization complete');
+            }
+
+            init() {
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                document.addEventListener('keyup', (e) => this.handleKeyUp(e));
+                
+                this.keys.forEach(key => {
+                    key.addEventListener('mousedown', () => this.playNote(key.dataset.note));
+                    key.addEventListener('mouseup', () => this.stopNote(key.dataset.note));
+                });
+            }
+
+            async playNote(note) {
+                console.log('Playing note:', note);
+                const midiNote = this.noteToMidi(note);
+                
+                if (this.device) {
+                    try {
+                        // 从全局设备获取最新参数值
+                        const globalDevice = window.device;
+                        
+                        // 同步参数值
+                        globalDevice.parameters.forEach(param => {
+                            const currentValue = param.value;
+                            this.device.parameters.forEach(localParam => {
+                                if (localParam.name === param.name) {
+                                    localParam.value = currentValue;
+                                }
+                            });
+                        });
+
+                        // 打印当前所有参数值
+                        console.log('Current parameters before playing:');
+                        this.device.parameters.forEach(param => {
+                            console.log(`${param.name} = ${param.value}`);
+                        });
+
+                        // 生成随机力度值（70-125之间）
+                        const velocity = Math.floor(Math.random() * 55) + 70;
+
+                        // 创建并发送MIDI事件
+                        const currentTime = this.device.context.currentTime * 1000;
+                        const midiEvent = new RNBO.MIDIEvent(currentTime, 0, 
+                            [0x90, midiNote, velocity]
+                        );
+
+                        // 发送MIDI事件
+                        this.device.scheduleEvent(midiEvent);
+                        
+                        console.log(`Playing note ${note} (MIDI: ${midiNote}) with velocity ${velocity}`);
+                        
+                        // 打印播放后的参数值
+                        console.log('Parameters after playing:');
+                        this.device.parameters.forEach(param => {
+                            console.log(`${param.name} = ${param.value}`);
+                        });
+                    } catch (error) {
+                        console.error('Error playing note:', error);
+                    }
+                }
+            }
+
+            stopNote(note) {
+                console.log('Stopping note:', note);
+                const midiNote = this.noteToMidi(note);
+                
+                if (this.device) {
+                    try {
+                        const midiEvent = new RNBO.MIDIEvent(this.device.context.currentTime * 1000, 0,
+                            [0x80, midiNote, 0]
+                        );
+                        this.device.scheduleEvent(midiEvent);
+                    } catch (error) {
+                        console.error('Error stopping note:', error);
+                    }
+                }
+            }
+
+            noteToMidi(note) {
+                const noteMap = {
+                    'C': 60,
+                    'C#': 61,
+                    'D': 62,
+                    'D#': 63,
+                    'E': 64,
+                    'F': 65,
+                    'F#': 66,
+                    'G': 67,
+                    'G#': 68,
+                    'A': 69,
+                    'A#': 70,
+                    'B': 71,
+                    'C2': 72
+                };
+                return noteMap[note] || 60;
+            }
+
+            handleKeyDown(e) {
+                if (e.repeat) return;
+                const key = e.key.toUpperCase();
+                if (this.keyMap[key] && !this.pressedKeys.has(key)) {
+                    this.pressedKeys.add(key);
+                    const note = this.keyMap[key];
+                    this.playNote(note);
+                    
+                    const keyElement = document.querySelector(`.key[data-note="${note}"]`);
+                    if (keyElement) {
+                        keyElement.classList.add('active');
+                    }
+                }
+            }
+
+            handleKeyUp(e) {
+                const key = e.key.toUpperCase();
+                if (this.pressedKeys.has(key)) {
+                    this.pressedKeys.delete(key);
+                    const note = this.keyMap[key];
+                    this.stopNote(note);
+                    
+                    const keyElement = document.querySelector(`.key[data-note="${note}"]`);
+                    if (keyElement) {
+                        keyElement.classList.remove('active');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
